@@ -52,9 +52,8 @@ use syn::spanned::Spanned;
 /// ```
 /// use std::str::FromStr;
 ///
-/// struct Wrapper<T> {
-///     val: T,
-/// }
+/// #[derive(Debug)]
+/// struct Wrapper<T>(T);
 ///
 /// #[tryfrom_via_fromstr::tryfrom_via_fromstr]
 /// impl<T> FromStr for Wrapper<T>
@@ -63,14 +62,13 @@ use syn::spanned::Spanned;
 ///     type Err = <T as FromStr>::Err;
 ///
 ///     fn from_str(s: &str) -> Result<Self, Self::Err> {
-///         let val = s.parse()?;
-///         Ok(Wrapper { val })
+///         s.parse().map(Wrapper)
 ///     }
 /// }
 ///
-/// let wv = Wrapper::<String>::try_from("foo")?;
-/// assert_eq!(format!("{wv:#?}"), r#"Wrapper("foo")"#.to_string());
-/// # Ok::<(), &'static str>(())
+/// let wv = Wrapper::<i64>::try_from("42")?;
+/// assert_eq!(format!("{wv:?}"), "Wrapper(42)".to_string());
+/// # Ok::<(), std::num::ParseIntError>(())
 /// ```
 #[proc_macro_attribute]
 pub fn tryfrom_via_fromstr(args: TokenStream1, input: TokenStream1) -> TokenStream1 {
