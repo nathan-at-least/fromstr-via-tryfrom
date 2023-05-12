@@ -15,11 +15,13 @@ use syn::spanned::Spanned;
 /// # Example
 ///
 /// ```
-/// #[derive(Debug, tryfrom_via_fromstr::TryFrom)]
+/// use tryfrom_via_fromstr::tryfrom_via_fromstr;
+///
 /// struct Cheer {
 ///     happy: bool,
 /// }
 ///
+/// #[tryfrom_via_fromstr]
 /// impl std::str::FromStr for Cheer {
 ///     type Err = &'static str;
 ///
@@ -50,11 +52,11 @@ use syn::spanned::Spanned;
 /// ```
 /// use std::str::FromStr;
 ///
-/// #[derive(Debug, tryfrom_via_fromstr::TryFrom)]
 /// struct Wrapper<T> {
 ///     val: T,
 /// }
 ///
+/// #[tryfrom_via_fromstr::tryfrom_via_fromstr]
 /// impl<T> FromStr for Wrapper<T>
 /// where T: FromStr,
 ///  {
@@ -67,7 +69,7 @@ use syn::spanned::Spanned;
 /// }
 ///
 /// let wv = Wrapper::<String>::try_from("foo")?;
-/// assert_eq!(format!("{wv:#?}"), #r"Wrapper("foo")"#.to_string());
+/// assert_eq!(format!("{wv:#?}"), r#"Wrapper("foo")"#.to_string());
 /// # Ok::<(), &'static str>(())
 /// ```
 #[proc_macro_attribute]
@@ -89,12 +91,12 @@ fn transform(args: TokenStream2, input: TokenStream2) -> syn::Result<TokenStream
     // Construct new impl generics with a prefixed 'a lifetime for `&'a str` `TryFrom` impl:
     let tryfrom_generics = prefix_impl_lifetime(&itemimpl.generics);
     let (impl_generics, _, _) = tryfrom_generics.split_for_impl();
-    let (_, ty_generics, where_clause) = itemimpl.generics.split_for_impl();
+    let (_, _, where_clause) = itemimpl.generics.split_for_impl();
 
     Ok(quote! {
         #itemimpl
 
-        impl #impl_generics ::std::convert::TryFrom<&'tryfrom_str_lifetime str> for #app_path #ty_generics #where_clause {
+        impl #impl_generics ::std::convert::TryFrom<&'tryfrom_str_lifetime str> for #app_path #where_clause {
             type Error = <Self as ::std::str::FromStr>::Err;
 
             fn try_from(s: &'tryfrom_str_lifetime str) -> Result<Self, Self::Error> {
@@ -105,20 +107,21 @@ fn transform(args: TokenStream2, input: TokenStream2) -> syn::Result<TokenStream
 }
 
 fn parse_args(args: TokenStream2) -> syn::Result<()> {
-    use syn::Meta::{List, NameValue, Path};
-
-    let span = args.span();
-    match syn::parse2::<syn::Meta>(args)? {
-        Path(_) => Ok(()),
-        List(_) => error_res(span, "no arguments supported"),
-        NameValue(_) => error_res(span, "no value assignment supported"),
+    if args.is_empty() {
+        Ok(())
+    } else {
+        error_res(args.span(), "no arguments supported")
     }
 }
 
 fn require_impl_for_fromstr(itemimpl: &syn::ItemImpl) -> syn::Result<()> {
     use quote::ToTokens;
 
-    const EXPECTED: &[&str] = &["FromStr", "std::str::FromStr", "::std::str::FromStr"];
+    const EXPECTED: &[&str] = &[
+        "FromStr",
+        "std :: str :: FromStr",
+        ":: std :: str :: FromStr",
+    ];
 
     let fromstrpath = itemimpl.get_path()?;
     let span = fromstrpath.span();

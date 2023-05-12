@@ -8,7 +8,6 @@ use test_case::test_case;
     "#},
     indoc! {r#"
         impl std::str::FromStr for MyType {}
-
         impl<'tryfrom_str_lifetime> ::std::convert::TryFrom<&'tryfrom_str_lifetime str>
         for MyType {
             type Error = <Self as ::std::str::FromStr>::Err;
@@ -21,14 +20,12 @@ use test_case::test_case;
 )]
 #[test_case(
     indoc! {r#"
-        impl<T> FromStr for MyWrapper<T> {}
+        impl<T> FromStr for UnconstrainedWrapper<T> {}
     "#},
     indoc! {r#"
-        impl<T> FromStr for MyWrapper<T> {}
-
+        impl<T> FromStr for UnconstrainedWrapper<T> {}
         impl<'tryfrom_str_lifetime, T> ::std::convert::TryFrom<&'tryfrom_str_lifetime str>
-        for Wrapper<T>
-        {
+        for UnconstrainedWrapper<T> {
             type Error = <Self as ::std::str::FromStr>::Err;
             fn try_from(s: &'tryfrom_str_lifetime str) -> Result<Self, Self::Error> {
                 s.parse()
@@ -39,7 +36,7 @@ use test_case::test_case;
 )]
 fn transform(input: &str, expected: &str) {
     let input = input.trim();
-    println!("For input:\n{}", quote_code(input));
+    eprintln!("For input:\n{}", quote_code(input));
     match transform_res(input) {
         Ok(found) => assert_eq!(
             expected,
@@ -78,12 +75,8 @@ fn transform_res(src: &str) -> Result<String> {
 }
 
 fn unparse(itemstream: TokenStream) -> Result<String> {
-    let item: syn::Item = parse(itemstream)?;
-    Ok(prettyplease::unparse(&syn::File {
-        shebang: None,
-        attrs: vec![],
-        items: vec![item],
-    }))
+    let f: syn::File = parse(itemstream)?;
+    Ok(prettyplease::unparse(&f))
 }
 
 fn parse<T>(stream: TokenStream) -> Result<T>
