@@ -34,15 +34,37 @@ use test_case::test_case;
     "#}
     ; "generic-type-unconstrained"
 )]
+#[test_case(
+    indoc! {r#"
+        impl<T> FromStr for ConstrainedWrapper<T> where T: FromStr {}
+    "#},
+    indoc! {r#"
+        impl<T> FromStr for ConstrainedWrapper<T>
+        where
+            T: FromStr,
+        {}
+        impl<'tryfrom_str_lifetime, T> ::std::convert::TryFrom<&'tryfrom_str_lifetime str>
+        for ConstrainedWrapper<T>
+        where
+            T: FromStr,
+        {
+            type Error = <Self as ::std::str::FromStr>::Err;
+            fn try_from(s: &'tryfrom_str_lifetime str) -> Result<Self, Self::Error> {
+                s.parse()
+            }
+        }
+    "#}
+    ; "generic-type-constrained"
+)]
 fn transform(input: &str, expected: &str) {
     let input = input.trim();
     eprintln!("For input:\n{}", quote_code(input));
-    match transform_res(input) {
-        Ok(found) => assert_eq!(
-            expected,
+    match transform_res(input, expected) {
+        Ok((found, expected)) => assert_eq!(
+            &expected,
             &found,
             "\n\nexpected:\n{}\n\nfound:\n{}",
-            quote_code(expected),
+            quote_code(&expected),
             quote_code(&found),
         ),
         Err(Error::Lex(e)) => panic!("lex error: {e}"),
@@ -64,13 +86,20 @@ enum Error {
 
 type Result<T> = std::result::Result<T, Error>;
 
-fn transform_res(src: &str) -> Result<String> {
+fn transform_res(input: &str, expected: &str) -> Result<(String, String)> {
     use quote::quote;
 
-    let input: TokenStream = src.parse()?;
+    let input: TokenStream = input.parse()?;
     let inputstr = input.to_string();
     let output = crate::transform(quote! {}, input).map_err(|e| Error::Syn(e, inputstr))?;
-    let pretty = unparse(output)?;
+    let output_pretty = unparse(output)?;
+    let expected_pretty = prettify(expected)?;
+    Ok((output_pretty, expected_pretty))
+}
+
+fn prettify(src: &str) -> Result<String> {
+    let ts: TokenStream = src.parse()?;
+    let pretty = unparse(ts)?;
     Ok(pretty)
 }
 
