@@ -51,11 +51,12 @@ use syn::spanned::Spanned;
 /// Derivation works for types with generics:
 /// ```
 /// use std::str::FromStr;
+/// use tryfrom_via_fromstr::tryfrom_via_fromstr;
 ///
 /// #[derive(Debug)]
 /// struct Wrapper<T>(T);
 ///
-/// #[tryfrom_via_fromstr::tryfrom_via_fromstr]
+/// #[tryfrom_via_fromstr]
 /// impl<T> FromStr for Wrapper<T>
 /// where T: FromStr,
 ///  {
