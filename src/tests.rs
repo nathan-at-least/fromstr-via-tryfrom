@@ -12,7 +12,9 @@ use test_case::test_case;
         for MyType {
             type Error = <Self as ::std::str::FromStr>::Err;
             fn try_from(s: &'tryfrom_str_lifetime str) -> Result<Self, Self::Error> {
-                s.parse()
+                use ::std::str::FromStr;
+
+                Self::from_str(s)
             }
         }
     "#}
@@ -28,7 +30,9 @@ use test_case::test_case;
         for UnconstrainedWrapper<T> {
             type Error = <Self as ::std::str::FromStr>::Err;
             fn try_from(s: &'tryfrom_str_lifetime str) -> Result<Self, Self::Error> {
-                s.parse()
+                use ::std::str::FromStr;
+
+                Self::from_str(s)
             }
         }
     "#}
@@ -50,7 +54,9 @@ use test_case::test_case;
         {
             type Error = <Self as ::std::str::FromStr>::Err;
             fn try_from(s: &'tryfrom_str_lifetime str) -> Result<Self, Self::Error> {
-                s.parse()
+                use ::std::str::FromStr;
+
+                Self::from_str(s)
             }
         }
     "#}
