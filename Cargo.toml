@@ -1,6 +1,6 @@
 [package]
 name = "tryfrom-via-fromstr"
-description = "Generate various str `TryFrom` impls from `FromStr`."
+description = "Derive `TryFrom` by delegating to the `FromStr` impl"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
