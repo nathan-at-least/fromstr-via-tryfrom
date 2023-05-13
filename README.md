@@ -1,3 +1,1 @@
-Derive `TryFrom` by delegating to the `FromStr` impl
-
-See [macro@tryfrom_via_fromstr] for examples.
+A rust proc-macro for deriving `TryFrom<&str>` from `FromStr`.

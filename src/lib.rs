@@ -1,5 +1,6 @@
-#![doc = include_str!("../README.md")]
-
+#![doc = include_str!("../description.md")]
+///
+/// See [macro@tryfrom_via_fromstr] for examples.
 mod error;
 mod getpath;
 
@@ -10,7 +11,7 @@ use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::spanned::Spanned;
 
-/// Derive `TryFrom` by delegating to the `FromStr` impl
+#[doc = include_str!("../description.md")]
 ///
 /// This assumes `FromStr` is defined and simply delegates to it.
 ///
