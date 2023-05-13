@@ -2,6 +2,7 @@
 name = "tryfrom-via-fromstr"
 description = "Derive `TryFrom` by delegating to the `FromStr` impl"
 version = "0.1.0"
+repository = "https://github.com/nathan-at-least/tryfrom-via-fromstr.git"
 edition = "2021"
 license = "MIT"
 
