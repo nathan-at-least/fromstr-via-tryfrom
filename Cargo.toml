@@ -1,7 +1,7 @@
 [package]
 name = "tryfrom-via-fromstr"
 description = "Derive `TryFrom` by delegating to the `FromStr` impl"
-version = "0.1.0"
+version = "0.1.1"
 repository = "https://github.com/nathan-at-least/tryfrom-via-fromstr.git"
 edition = "2021"
 license = "MIT"
