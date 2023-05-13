@@ -1,6 +1,6 @@
 #![doc = include_str!("../description.md")]
-///
-/// See [macro@tryfrom_via_fromstr] for examples.
+//!
+//! See [macro@tryfrom_via_fromstr] for examples.
 mod error;
 mod getpath;
 
@@ -49,6 +49,25 @@ use syn::spanned::Spanned;
 /// # Ok::<(), &'static str>(())
 /// ```
 ///
+/// The above snippet expands to something like this:
+/// ```
+/// # use std::str::FromStr;
+/// # struct Cheer;
+/// # impl FromStr for Cheer {
+/// #     type Err = ();
+/// #     fn from_str(_: &str) -> Result<Cheer, ()> {
+/// #         Ok(Cheer)
+/// #     }
+/// # }
+/// impl<'a> TryFrom<&'a str> for Cheer {
+///     type Error = <Self as FromStr>::Err;
+///
+///     fn try_from(s: &'a str) -> Result<Self, Self::Error> {
+///         Self::from_str(s)
+///     }
+/// }
+/// ```
+///
 /// # Example with Generics
 ///
 /// Derivation works for types with generics:
@@ -73,6 +92,30 @@ use syn::spanned::Spanned;
 /// let wv = Wrapper::<i64>::try_from("42")?;
 /// assert_eq!(format!("{wv:?}"), "Wrapper(42)".to_string());
 /// # Ok::<(), std::num::ParseIntError>(())
+/// ```
+///
+/// Type constraints are carried through, so the above example expands
+/// to something similar to:
+///
+/// ```
+/// # use std::str::FromStr;
+/// # struct Wrapper<T>(T);
+/// # impl<T: FromStr> FromStr for Wrapper<T>  {
+/// #     type Err = <T as FromStr>::Err;
+/// #     fn from_str(s: &str) -> Result<Self, Self::Err> {
+/// #         T::from_str(s).map(Wrapper)
+/// #     }
+/// # }
+/// impl<'a, T> TryFrom<&'a str> for Wrapper<T>
+/// where
+///     T: FromStr,
+/// {
+///     type Error = <Self as FromStr>::Err;
+///
+///     fn try_from(s: &'a str) -> Result<Self, Self::Error> {
+///         Self::from_str(s)
+///     }
+/// }
 /// ```
 #[proc_macro_attribute]
 pub fn tryfrom_via_fromstr(args: TokenStream1, input: TokenStream1) -> TokenStream1 {
@@ -102,7 +145,9 @@ fn transform(args: TokenStream2, input: TokenStream2) -> syn::Result<TokenStream
             type Error = <Self as ::std::str::FromStr>::Err;
 
             fn try_from(s: &'tryfrom_str_lifetime str) -> Result<Self, Self::Error> {
-                s.parse()
+                use ::std::str::FromStr;
+
+                Self::from_str(s)
             }
         }
     })
